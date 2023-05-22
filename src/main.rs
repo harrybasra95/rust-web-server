@@ -2,8 +2,12 @@ use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
 };
+use dotenv::dotenv;
 
 mod routes;
+mod db;
+mod types;
+
 #[derive(Debug)]
 struct Route {
     method: String,
@@ -12,6 +16,8 @@ struct Route {
 }
 
 fn main() {
+    dotenv().ok();
+
     let listner = TcpListener::bind("localhost:3000").unwrap();
 
     let mut routes: Vec<Route> = Vec::new();
@@ -51,5 +57,5 @@ fn create_routes(routes: &mut Vec<Route>) {
         method: String::from("GET"),
         url: String::from("/users"),
         handler: routes::users::all_users,
-    })
+    });
 }
