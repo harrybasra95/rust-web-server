@@ -1,19 +1,12 @@
-use std::{
-    io::{prelude::*, BufReader},
-    net::{TcpListener, TcpStream},
-};
 use dotenv::dotenv;
+use std::net::{TcpListener, TcpStream};
+use types::{RequestData, Route};
+use utils::{request::get_req_data, response::handle_error};
 
-mod routes;
 mod db;
+mod routes;
 mod types;
-
-#[derive(Debug)]
-struct Route {
-    method: String,
-    url: String,
-    handler: fn(TcpStream),
-}
+mod utils;
 
 fn main() {
     dotenv().ok();
@@ -30,26 +23,27 @@ fn main() {
 }
 
 fn router(mut stream: TcpStream, routes: &mut Vec<Route>) {
-    let buf_reader = BufReader::new(&mut stream);
-    let request_line: Vec<String> = buf_reader
-        .lines()
-        .next()
-        .unwrap()
-        .unwrap()
-        .split_whitespace()
-        .map(|s| s.to_string())
-        .collect();
+    let req_data = get_req_data(&mut stream);
 
-    let request_method = request_line[0].to_string();
-    let request_url = request_line[1].to_string();
+    if req_data.is_none() {
+        return handle_error(&stream, 400, None);
+    }
+    let RequestData { method, url } = req_data.unwrap();
 
     let route = routes
         .iter()
-        .find(|route| route.url == request_url && route.method == request_method);
+        .find(|route| route.url == url && route.method == method);
 
-    (route.unwrap().handler)(stream);
+    if route.is_none() {
+        return handle_error(&stream, 404, Some("Route not found"));
+    }
 
-   
+    match route {
+        Some(route) => (route.handler)(stream),
+        _ => {
+            return handle_error(&stream, 500, None);
+        }
+    }
 }
 
 fn create_routes(routes: &mut Vec<Route>) {
@@ -58,4 +52,9 @@ fn create_routes(routes: &mut Vec<Route>) {
         url: String::from("/users"),
         handler: routes::users::all_users,
     });
+    routes.push(Route {
+        method: String::from("POST"),
+        url: String::from("/users"),
+        handler: routes::users::create_user,
+    })
 }

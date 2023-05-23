@@ -1,12 +1,12 @@
 use crate::db;
 use crate::types::User;
-use serde_json::json;
-use std::{io::Write, net::TcpStream};
+use crate::utils::response::send_array;
+use std::io::{BufRead, BufReader};
+use std::net::TcpStream;
 
-pub fn all_users(mut _stream: TcpStream) {
+pub fn all_users(stream: TcpStream) {
     let mut client = db::connect();
     let result = client.query("SELECT * FROM users;", &[]);
-    println!("{:#?}", result);
     if let Err(e) = result {
         return println!("{e}");
     }
@@ -27,13 +27,12 @@ pub fn all_users(mut _stream: TcpStream) {
         };
         users.push(user);
     }
-    let result_json = json!({
-        "isSuccess":true,
-        "users":users
-    });
-    let mut response = String::from("HTTP/1.1 200 OK\r\n\r\n");
-    response.push_str(result_json.to_string().as_str());
-    if let Err(e) = _stream.write((response).as_bytes()) {
-        println!("Error writing to TcpStream: {}", e);
-    }
+    send_array::<User>(&stream, users);
+}
+
+pub fn create_user(mut stream: TcpStream) {
+    let buf_reader = BufReader::new(&mut stream);
+    let lines = buf_reader.lines().next().unwrap().unwrap();
+    println!("asdsa");
+    println!("{lines}")
 }
