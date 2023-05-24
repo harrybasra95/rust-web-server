@@ -3,7 +3,7 @@ use serde_json::json;
 use std::io::Write;
 use std::net::TcpStream;
 
-pub fn send_array<T>(mut stream: &TcpStream, data: Vec<T>)
+pub fn send_array<T>(mut stream: &TcpStream, data: &[T])
 where
     T: Serialize,
 {
@@ -11,7 +11,10 @@ where
         "isSuccess":true,
         "items":data
     });
-    let response: String = format!("HTTP/1.1 200 OK\r\n\r\n{}", result_json);
+    let response: String = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\n\r\n{}",
+        result_json
+    );
     if let Err(e) = stream.write_all((response).as_bytes()) {
         println!("Error writing to TcpStream: {}", e);
     }

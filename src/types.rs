@@ -2,6 +2,8 @@ use std::net::TcpStream;
 
 use serde::{Deserialize, Serialize};
 
+use crate::db::DbPool;
+
 #[derive(Debug, Serialize, Clone, Default, Deserialize)]
 pub struct User {
     pub id: i32,
@@ -14,7 +16,7 @@ pub struct User {
 pub struct Route {
     pub method: String,
     pub url: String,
-    pub handler: fn(TcpStream),
+    pub handler: fn(TcpStream, DbPool),
 }
 
 #[derive(Debug, Serialize, Clone, Default, Deserialize)]

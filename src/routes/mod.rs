@@ -1,6 +1,7 @@
 use std::net::TcpStream;
 
 use crate::{
+    db::DbPool,
     routes,
     types::{RequestData, Route},
     utils::{request::get_req_data, response::handle_error},
@@ -23,12 +24,10 @@ fn create_routes() -> Vec<Route> {
     routes_vec
 }
 
-pub fn router(mut stream: TcpStream) {
+pub fn router(mut stream: TcpStream, db_pool: DbPool) {
     let routes = create_routes();
 
     let req_data = get_req_data(&mut stream);
-
-    println!("{:?}", req_data);
 
     if req_data.is_none() {
         return handle_error(&stream, 400, None);
@@ -48,7 +47,7 @@ pub fn router(mut stream: TcpStream) {
     }
 
     match route {
-        Some(route) => (route.handler)(stream),
+        Some(route) => (route.handler)(stream, db_pool),
         _ => {
             return handle_error(&stream, 500, None);
         }
