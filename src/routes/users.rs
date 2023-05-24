@@ -5,8 +5,9 @@ use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
 pub fn all_users(stream: TcpStream) {
-    let mut client = db::connect();
-    let result = client.query("SELECT * FROM users;", &[]);
+    let client = db::connect();
+
+    let result = client.unwrap().query("SELECT * FROM users;", &[]);
     if let Err(e) = result {
         return println!("{e}");
     }
@@ -31,6 +32,7 @@ pub fn all_users(stream: TcpStream) {
 }
 
 pub fn create_user(mut stream: TcpStream) {
+    println!("create user");
     let buf_reader = BufReader::new(&mut stream);
     let lines = buf_reader.lines().next().unwrap().unwrap();
     println!("asdsa");

@@ -21,4 +21,5 @@ pub struct Route {
 pub struct RequestData {
     pub method: String,
     pub url: String,
+    pub query_params: Vec<(String, String)>,
 }
