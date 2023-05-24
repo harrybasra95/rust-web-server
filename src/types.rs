@@ -1,4 +1,4 @@
-use std::net::TcpStream;
+use std::{collections::HashMap, net::TcpStream};
 
 use serde::{Deserialize, Serialize};
 
@@ -23,5 +23,7 @@ pub struct Route {
 pub struct RequestData {
     pub method: String,
     pub url: String,
-    pub query_params: Vec<(String, String)>,
+    pub query_params: HashMap<String, String>,
+    pub body: HashMap<String, String>,
+    pub headers: HashMap<String, String>,
 }

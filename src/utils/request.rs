@@ -1,32 +1,43 @@
-use std::{
-    io::{BufRead, BufReader},
-    net::TcpStream,
-};
+use std::{collections::HashMap, io::Read, net::TcpStream};
 
 use crate::types::RequestData;
 
 pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
-    let buf_reader = BufReader::new(stream);
-    let http_request: Vec<String> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
+    let mut buffer = [0; 512];
 
-    if http_request.len() == 0 {
+    let read_result = stream.read(&mut buffer);
+
+    if read_result.is_err() {
+        return None;
+    }
+    let bytes_read = read_result.unwrap();
+
+    if bytes_read == 0 {
         return None;
     }
 
-    let (method, url, query_params) = get_method_url_query_params(http_request.get(0))?;
+    let http_request = String::from_utf8_lossy(&buffer[..]);
+    let mut lines = http_request.trim().split("\r\n");
 
-    let mut headers: Vec<(String, String)> = Vec::new();
-    for line in http_request {
-        if line.contains("{") {
+    let first_line = lines.next()?;
+
+    let (method, url, query_params) = get_method_url_query_params(first_line)?;
+
+    let mut has_body_started = false;
+    let mut headers: HashMap<String, String> = HashMap::new();
+    let mut body: HashMap<String, String> = HashMap::new();
+
+    for line in lines {
+        if line.is_empty() {
+            has_body_started = true;
+            continue;
+        }
+        if has_body_started {
+            get_body_fields(line, &mut body);
             break;
         }
         if line.contains(":") {
-            let mut line = line.splitn(2, ":");
-            headers.push((line.next()?.to_string(), line.next()?.to_string()))
+            get_headers(line, &mut headers);
         }
     }
 
@@ -34,28 +45,55 @@ pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
         method,
         url,
         query_params,
+        headers,
+        body,
     })
 }
 
 fn get_method_url_query_params(
-    req_url_data: Option<&String>,
-) -> Option<(String, String, Vec<(String, String)>)> {
-    req_url_data.and_then(|url_data| {
-        let mut url_parts = url_data.splitn(3, ' ');
-        let req_method = url_parts.next()?.to_string();
-        let request_url_and_query_params = url_parts.next()?;
-        let mut url_parts = request_url_and_query_params.splitn(2, "?");
-        let req_url = url_parts.next()?.to_string();
-        let query_params = match url_parts.next() {
-            Some(url_parts) => url_parts
-                .split('&')
-                .filter_map(|param| {
-                    let mut parts = param.splitn(2, "=");
-                    Some((parts.next()?.to_string(), parts.next()?.to_string()))
-                })
-                .collect(),
-            None => Vec::new(),
-        };
-        Some((req_method, req_url, query_params))
-    })
+    url_data: &str,
+) -> Option<(String, String, HashMap<String, String>)> {
+    let mut url_parts = url_data.splitn(3, ' ');
+    let req_method = url_parts.next()?.to_string();
+    let request_url_and_query_params = url_parts.next()?;
+    let mut url_parts = request_url_and_query_params.splitn(2, "?");
+    let req_url = url_parts.next()?.to_string();
+    let mut query_params: HashMap<String, String> = HashMap::new();
+    match url_parts.next() {
+        Some(url_parts) => url_parts.split('&').for_each(|param| {
+            let mut parts = param.splitn(2, "=");
+            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+                query_params.insert(key.to_string(), value.to_string());
+            }
+        }),
+        None => (),
+    };
+    Some((req_method, req_url, query_params))
+}
+
+fn get_body_fields(line: &str, body: &mut HashMap<String, String>) {
+    line.trim()
+        .replace('{', "")
+        .replace("}", "")
+        .trim()
+        .split(",")
+        .for_each(|s| {
+            let s = s.trim().replace("\"", "");
+            let mut s = s.splitn(2, ":");
+            if let (Some(key), Some(value)) = (s.next(), s.next()) {
+                body.insert(
+                    key.to_string(),
+                    value
+                        .trim_matches(|c: char| c == '\0' || c.is_whitespace())
+                        .to_string(),
+                );
+            }
+        });
+}
+
+fn get_headers(line: &str, headers: &mut HashMap<String, String>) {
+    let mut line = line.splitn(2, ":");
+    if let (Some(key), Some(value)) = (line.next(), line.next()) {
+        headers.insert(key.trim().to_string(), value.trim().to_string());
+    }
 }

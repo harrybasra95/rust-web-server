@@ -1,4 +1,4 @@
-use crate::db::{self, DbPool};
+use crate::db::DbPool;
 use crate::types::User;
 use crate::utils::response::send_array;
 use std::io::{BufRead, BufReader};

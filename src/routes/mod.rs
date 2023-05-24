@@ -32,11 +32,7 @@ pub fn router(mut stream: TcpStream, db_pool: DbPool) {
     if req_data.is_none() {
         return handle_error(&stream, 400, None);
     }
-    let RequestData {
-        method,
-        url,
-        query_params: _query_params,
-    } = req_data.unwrap();
+    let RequestData { method, url, .. } = req_data.unwrap();
 
     let route = routes
         .iter()
