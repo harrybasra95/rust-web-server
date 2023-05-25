@@ -8,25 +8,21 @@ mod routes;
 mod types;
 mod utils;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     dotenv().ok();
-    let db_pool = match create_db_pool() {
-        Ok(pool) => pool,
-        Err(_) => {
-            println!("Error connecting to database");
-            return;
-        }
-    };
+    let db_pool = create_db_pool().await.unwrap();
 
     let listner = TcpListener::bind("localhost:3000").unwrap();
 
     for stream in listner.incoming() {
         match stream {
-            Ok(stream) => router(stream, db_pool.clone()),
+            Ok(stream) => router(stream, db_pool.clone()).await,
             Err(_) => {
                 println!("Error accepting connection");
                 continue;
             }
         }
     }
+    drop(db_pool);
 }

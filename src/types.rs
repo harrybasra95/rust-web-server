@@ -1,10 +1,11 @@
-use std::{collections::HashMap, net::TcpStream};
+use std::{collections::HashMap, future::Future, net::TcpStream, pin::Pin};
 
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
 use crate::db::DbPool;
 
-#[derive(Debug, Serialize, Clone, Default, Deserialize)]
+#[derive(Debug, Serialize, Clone, Default, Deserialize, FromRow)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -12,11 +13,12 @@ pub struct User {
     pub email: String,
 }
 
-#[derive(Debug, Clone)]
+type RouteHandler = Box<dyn Fn(Request) -> Pin<Box<dyn Future<Output = ()>>>>;
+
 pub struct Route {
     pub method: String,
     pub url: String,
-    pub handler: fn(Request),
+    pub handler: RouteHandler,
 }
 
 #[derive(Debug, Serialize, Clone, Default, Deserialize)]

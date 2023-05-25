@@ -3,28 +3,21 @@ use std::net::TcpStream;
 use crate::{
     db::DbPool,
     routes,
-    types::{Request, RequestData, Route},
+    types::{Request, Route},
     utils::{request::get_req_data, response::handle_error},
 };
 
 pub mod users;
 
 fn create_routes() -> Vec<Route> {
-    let mut routes_vec: Vec<Route> = Vec::new();
-    routes_vec.push(Route {
+    vec![Route {
         method: String::from("GET"),
         url: String::from("/users"),
-        handler: routes::users::all_users,
-    });
-    routes_vec.push(Route {
-        method: String::from("POST"),
-        url: String::from("/users"),
-        handler: routes::users::create_user,
-    });
-    routes_vec
+        handler: Box::new(|r: Request| Box::pin(routes::users::all_users(r))),
+    }]
 }
 
-pub fn router(mut stream: TcpStream, db_pool: DbPool) {
+pub async fn router(mut stream: TcpStream, db_pool: DbPool) {
     let routes = create_routes();
 
     let req_data = get_req_data(&mut stream);
@@ -51,7 +44,9 @@ pub fn router(mut stream: TcpStream, db_pool: DbPool) {
     };
 
     match route {
-        Some(route) => (route.handler)(request),
+        Some(route) => {
+            (route.handler)(request).await;
+        }
         _ => {
             return handle_error(&request.stream, 500, None);
         }

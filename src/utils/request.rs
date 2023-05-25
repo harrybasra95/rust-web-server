@@ -11,7 +11,6 @@ pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
         return None;
     }
     let bytes_read = read_result.unwrap();
-
     if bytes_read == 0 {
         return None;
     }
