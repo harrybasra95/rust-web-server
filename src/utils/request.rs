@@ -1,6 +1,6 @@
-use std::{collections::HashMap, io::Read, net::TcpStream};
+use std::{collections::HashMap, io::Read, net::TcpStream, str::FromStr};
 
-use crate::types::RequestData;
+use crate::{constants::enums::RequestTypes, types::RequestData};
 
 pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
     let mut buffer = [0; 512];
@@ -51,9 +51,9 @@ pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
 
 fn get_method_url_query_params(
     url_data: &str,
-) -> Option<(String, String, HashMap<String, String>)> {
+) -> Option<(RequestTypes, String, HashMap<String, String>)> {
     let mut url_parts = url_data.splitn(3, ' ');
-    let req_method = url_parts.next()?.to_string();
+    let req_method = RequestTypes::from_str(url_parts.next()?).unwrap();
     let request_url_and_query_params = url_parts.next()?;
     let mut url_parts = request_url_and_query_params.splitn(2, "?");
     let req_url = url_parts.next()?.to_string();

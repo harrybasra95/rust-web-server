@@ -3,6 +3,7 @@ use dotenv::dotenv;
 use routes::router;
 use std::net::TcpListener;
 
+mod constants;
 mod db;
 mod routes;
 mod types;

@@ -1,6 +1,7 @@
 use std::net::TcpStream;
 
 use crate::{
+    constants::enums::RequestTypes,
     db::DbPool,
     routes,
     types::{Request, Route},
@@ -10,11 +11,18 @@ use crate::{
 pub mod users;
 
 fn create_routes() -> Vec<Route> {
-    vec![Route {
-        method: String::from("GET"),
-        url: String::from("/users"),
-        handler: Box::new(|r: Request| Box::pin(routes::users::all_users(r))),
-    }]
+    vec![
+        Route {
+            method: RequestTypes::GET,
+            url: String::from("/users"),
+            handler: Box::new(|r: Request| Box::pin(routes::users::all_users(r))),
+        },
+        Route {
+            method: RequestTypes::POST,
+            url: String::from("/users"),
+            handler: Box::new(|r: Request| Box::pin(routes::users::create_user(r))),
+        },
+    ]
 }
 
 pub async fn router(mut stream: TcpStream, db_pool: DbPool) {
