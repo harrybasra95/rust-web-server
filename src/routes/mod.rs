@@ -5,7 +5,10 @@ use crate::{
     db::DbPool,
     routes,
     types::{Request, Route},
-    utils::{request::get_req_data, response::handle_error},
+    utils::{
+        request::{get_req_data, match_and_extract_url_params},
+        response::handle_error,
+    },
 };
 
 pub mod users;
@@ -14,7 +17,7 @@ fn create_routes() -> Vec<Route> {
     vec![
         Route {
             method: RequestTypes::GET,
-            url: String::from("/users"),
+            url: String::from("/users/:id/:Asdsad"),
             handler: Box::new(|r: Request| Box::pin(routes::users::all_users(r))),
         },
         Route {
@@ -30,20 +33,23 @@ pub async fn router(mut stream: TcpStream, db_pool: DbPool) {
 
     let req_data = get_req_data(&mut stream);
 
-    let req_data = match req_data {
+    let mut req_data = match req_data {
         Some(req_data) => req_data,
         None => {
             return handle_error(&stream, 400, None);
         }
     };
 
-    let route = routes
-        .iter()
-        .find(|route| route.url == req_data.url && route.method == req_data.method);
+    let route = routes.iter().find(|route| {
+        match_and_extract_url_params(&req_data.url, &route.url, &mut req_data.url_params)
+            && route.method == req_data.method
+    });
 
     if route.is_none() {
         return handle_error(&stream, 404, Some("Route not found"));
     }
+
+    println!("{req_data:#?}");
 
     let request = Request {
         req_data,

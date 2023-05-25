@@ -20,7 +20,7 @@ where
     }
 }
 
-pub fn send_data<T>(mut stream: &TcpStream, data: T)
+pub fn _send_data<T>(mut stream: &TcpStream, data: T)
 where
     T: Serialize,
 {

@@ -25,6 +25,7 @@ pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
     let mut has_body_started = false;
     let mut headers: HashMap<String, String> = HashMap::new();
     let mut body: HashMap<String, String> = HashMap::new();
+    let url_params: HashMap<String, String> = HashMap::new();
 
     for line in lines {
         if line.is_empty() {
@@ -46,6 +47,7 @@ pub fn get_req_data(stream: &mut TcpStream) -> Option<RequestData> {
         query_params,
         headers,
         body,
+        url_params,
     })
 }
 
@@ -56,7 +58,7 @@ fn get_method_url_query_params(
     let req_method = RequestTypes::from_str(url_parts.next()?).unwrap();
     let request_url_and_query_params = url_parts.next()?;
     let mut url_parts = request_url_and_query_params.splitn(2, "?");
-    let req_url = url_parts.next()?.to_string();
+    let req_url = url_parts.next()?.trim_end_matches("/").to_string();
     let mut query_params: HashMap<String, String> = HashMap::new();
     match url_parts.next() {
         Some(url_parts) => url_parts.split('&').for_each(|param| {
@@ -95,4 +97,40 @@ fn get_headers(line: &str, headers: &mut HashMap<String, String>) {
     if let (Some(key), Some(value)) = (line.next(), line.next()) {
         headers.insert(key.trim().to_string(), value.trim().to_string());
     }
+}
+
+pub fn match_and_extract_url_params(
+    req_url: &String,
+    route_url: &String,
+    url_params: &mut HashMap<String, String>,
+) -> bool {
+    if !route_url.contains("/:") {
+        return req_url == route_url;
+    }
+    let req_url: Vec<&str> = req_url.split("/").collect();
+    let route_url: Vec<&str> = route_url.split("/").collect();
+
+    if req_url.len() != route_url.len() {
+        return false;
+    }
+
+    let mut is_match = true;
+
+    for (req_str, route_str) in req_url.iter().zip(route_url.iter()) {
+        if route_str.contains(":") {
+            url_params.insert(
+                route_str.trim_start_matches(":").to_string(),
+                req_str.to_string(),
+            );
+            continue;
+        }
+        if route_str != route_str {
+            is_match = false;
+            break;
+        }
+    }
+
+    println!("{:#?}", url_params);
+
+    return is_match;
 }

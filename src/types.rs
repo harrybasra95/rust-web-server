@@ -28,6 +28,7 @@ pub struct RequestData {
     pub query_params: HashMap<String, String>,
     pub body: HashMap<String, String>,
     pub headers: HashMap<String, String>,
+    pub url_params: HashMap<String, String>,
 }
 
 #[derive(Debug)]
