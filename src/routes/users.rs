@@ -1,10 +1,13 @@
 use crate::db::DbPool;
-use crate::types::User;
+use crate::types::{Request, User};
 use crate::utils::response::send_array;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
-pub fn all_users(stream: TcpStream, db_pool: DbPool) {
+pub fn all_users(req: Request) {
+    let Request {
+        db_pool, stream, ..
+    } = req;
     let mut client = db_pool.get().unwrap();
 
     let result = client.query("SELECT * FROM users;", &[]);
@@ -31,10 +34,4 @@ pub fn all_users(stream: TcpStream, db_pool: DbPool) {
     send_array::<User>(&stream, &users);
 }
 
-pub fn create_user(mut stream: TcpStream, db_pool: DbPool) {
-    println!("create user");
-    let buf_reader = BufReader::new(&mut stream);
-    let lines = buf_reader.lines().next().unwrap().unwrap();
-    println!("asdsa");
-    println!("{lines}")
-}
+pub fn create_user(req: Request) {}

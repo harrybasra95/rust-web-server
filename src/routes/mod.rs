@@ -3,7 +3,7 @@ use std::net::TcpStream;
 use crate::{
     db::DbPool,
     routes,
-    types::{RequestData, Route},
+    types::{Request, RequestData, Route},
     utils::{request::get_req_data, response::handle_error},
 };
 
@@ -29,23 +29,31 @@ pub fn router(mut stream: TcpStream, db_pool: DbPool) {
 
     let req_data = get_req_data(&mut stream);
 
-    if req_data.is_none() {
-        return handle_error(&stream, 400, None);
-    }
-    let RequestData { method, url, .. } = req_data.unwrap();
+    let req_data = match req_data {
+        Some(req_data) => req_data,
+        None => {
+            return handle_error(&stream, 400, None);
+        }
+    };
 
     let route = routes
         .iter()
-        .find(|route| route.url == url && route.method == method);
+        .find(|route| route.url == req_data.url && route.method == req_data.method);
 
     if route.is_none() {
         return handle_error(&stream, 404, Some("Route not found"));
     }
 
+    let request = Request {
+        req_data,
+        stream,
+        db_pool,
+    };
+
     match route {
-        Some(route) => (route.handler)(stream, db_pool),
+        Some(route) => (route.handler)(request),
         _ => {
-            return handle_error(&stream, 500, None);
+            return handle_error(&request.stream, 500, None);
         }
     }
 }

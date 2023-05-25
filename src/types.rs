@@ -16,7 +16,7 @@ pub struct User {
 pub struct Route {
     pub method: String,
     pub url: String,
-    pub handler: fn(TcpStream, DbPool),
+    pub handler: fn(Request),
 }
 
 #[derive(Debug, Serialize, Clone, Default, Deserialize)]
@@ -26,4 +26,11 @@ pub struct RequestData {
     pub query_params: HashMap<String, String>,
     pub body: HashMap<String, String>,
     pub headers: HashMap<String, String>,
+}
+
+#[derive(Debug)]
+pub struct Request {
+    pub req_data: RequestData,
+    pub stream: TcpStream,
+    pub db_pool: DbPool,
 }
