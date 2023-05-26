@@ -17,7 +17,7 @@ fn create_routes() -> Vec<Route> {
     vec![
         Route {
             method: RequestTypes::GET,
-            url: String::from("/users/:id/:Asdsad"),
+            url: String::from("/users"),
             handler: Box::new(|r: Request| Box::pin(routes::users::all_users(r))),
         },
         Route {
@@ -48,8 +48,6 @@ pub async fn router(mut stream: TcpStream, db_pool: DbPool) {
     if route.is_none() {
         return handle_error(&stream, 404, Some("Route not found"));
     }
-
-    println!("{req_data:#?}");
 
     let request = Request {
         req_data,

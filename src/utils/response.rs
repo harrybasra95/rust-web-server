@@ -20,13 +20,13 @@ where
     }
 }
 
-pub fn _send_data<T>(mut stream: &TcpStream, data: T)
+pub fn send_data<T>(mut stream: &TcpStream, data: T)
 where
     T: Serialize,
 {
     let result_json = json!({
         "isSuccess":true,
-        "items":data
+        "item":data
     });
     let response: String = format!("HTTP/1.1 200 OK\r\n\r\n{}", result_json);
     if let Err(e) = stream.write((response).as_bytes()) {
@@ -44,7 +44,7 @@ pub fn handle_error(mut stream: &TcpStream, status_code: u16, e: Option<&str>) {
         "error":error_message
     });
     let response: String = format!(
-        "HTTP/1.1 {} {}\r\n\r\n{}",
+        "HTTP/1.1 {} {}\r\nContent-Type: application/json; charset=utf-8\r\n\r\n{}",
         status_code,
         get_status_text(status_code),
         result_json
@@ -58,6 +58,7 @@ fn get_status_text(status_code: u16) -> &'static str {
     match status_code {
         200 => "OK",
         400 => "Bad Request",
+        403 => "Validation Error",
         500 => "Internal Server Error",
         _ => "Unknown",
     }
