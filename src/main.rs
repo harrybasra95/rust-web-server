@@ -1,6 +1,7 @@
 use db::create_db_pool;
 use dotenv::dotenv;
 use routes::router;
+use sqlx::migrate;
 use std::net::TcpListener;
 
 mod constants;
@@ -13,6 +14,11 @@ mod utils;
 async fn main() {
     dotenv().ok();
     let db_pool = create_db_pool().await.unwrap();
+
+    migrate!("./migrations")
+        .run(&db_pool)
+        .await
+        .expect("Failed to run database migrations");
 
     let listner = TcpListener::bind("localhost:3000").unwrap();
 
