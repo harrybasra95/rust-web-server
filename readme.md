@@ -30,7 +30,7 @@ Instructions on how to use the project once it's set up. Include any commands or
 
 Explain any configuration options available for the project. This could include environment variables, configuration files, or command-line options.
 
--    `PG_URL` - Postgres url.
+-    `DATABASE_URL` - Postgres url.
 -    `RUST_BACKTRACE` - If you want to back tracing (Optional).
 
 ## Contributing
