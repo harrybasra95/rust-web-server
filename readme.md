@@ -1,6 +1,6 @@
-# Project Name
+# Rust Web Server
 
-Description of the project.
+This project is a simple HTTP server implemented in Rust, showcasing the use of the Actix web framework and the SQLx database library. It provides a foundation for building scalable and efficient web applications using Rust's strong type system and concurrency model.
 
 ## Table of Contents
 
@@ -11,13 +11,22 @@ Description of the project.
 -    [Contributing](#contributing)
 -    [License](#license)
 
-## Installation
+## Getting Started
 
-Instructions to install and set up the project locally. Include any prerequisites, dependencies, or environment setup.
+To run the Rust web server locally, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/harrybasra95/rust-web-server`
-2. Install dependencies: `cargo build`
-3. Set up the database: _Provide necessary instructions if applicable._
+1. Ensure you have Rust installed. If not, follow the installation instructions at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
+2. Set up a PostgreSQL database. Make sure you have a PostgreSQL server running and create a database for the project.
+3. Clone the repository and navigate to the project directory.
+4. Set the `DATABASE_URL` environment variable to your PostgreSQL database URL. For example:
+     ```shell
+     DATABASE_URL=postgres://postgres:password@localhost:5432/server
+     ```
+5. Build and run the server using Cargo
+     ```shell
+     cargo run
+     ```
+6. The server should now be running on localhost:3000.
 
 ## Usage
 
@@ -31,7 +40,6 @@ Instructions on how to use the project once it's set up. Include any commands or
 Explain any configuration options available for the project. This could include environment variables, configuration files, or command-line options.
 
 -    `DATABASE_URL` - Postgres url.
--    `RUST_BACKTRACE` - If you want to back tracing (Optional).
 
 ## Contributing
 
