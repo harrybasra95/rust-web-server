@@ -71,3 +71,30 @@ pub async fn create_user(req: Request) {
         Err(e) => println!("{e}"),
     }
 }
+
+pub async fn get_one_user(req: Request) {
+    let Request {
+        req_data,
+        db_pool,
+        stream,
+        ..
+    } = req;
+    let RequestData { url_params, .. } = req_data;
+
+    let user_id = match url_params.get("id") {
+        Some(value) => value.to_string(),
+        None => {
+            return handle_error(&stream, 403, Some(&missing_field_err("id")));
+        }
+    };
+
+    let result: Result<User, sqlx::Error> = query_as("SELECT * FROM users where userId = $1")
+        .bind(user_id)
+        .fetch_one(&db_pool)
+        .await;
+
+    match result {
+        Ok(user) => send_data(&stream, &user),
+        Err(_) => return handle_error(&stream, 404, Some("User not found")),
+    }
+}

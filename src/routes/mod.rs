@@ -25,6 +25,11 @@ fn create_routes() -> Vec<Route> {
             url: String::from("/users"),
             handler: Box::new(|r: Request| Box::pin(routes::users::create_user(r))),
         },
+        Route {
+            method: RequestTypes::POST,
+            url: String::from("/users/:id"),
+            handler: Box::new(|r: Request| Box::pin(routes::users::get_one_user(r))),
+        },
     ]
 }
 
